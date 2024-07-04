@@ -37,16 +37,16 @@ func main() {
 	interval := os.Getenv("NS1_INTERVAL")
 
 	if zone == "" || key == "" {
-		fmt.Println("Missing required environment variables.")
+		fmt.Println("Missing required environment variables NS1_KEY and NS1_ZONE.")
 		return
 	}
 	if domains == "" {
-		fmt.Println("Missing NS1_DOMAINS, setting it to NS1_ZONE.")
+		fmt.Printf("Missing NS1_DOMAINS, setting it to NS1_ZONE (%s).\n", zone)
 		domains = zone
 	}
 	intervalMinutes, err := strconv.Atoi(interval)
 	if err != nil {
-		fmt.Printf("Missing or invalid NS1_INTERVAL, using %d (default)\n", defaultInterval)
+		fmt.Printf("Missing or invalid NS1_INTERVAL, setting it to %d (default).\n", defaultInterval)
 		intervalMinutes = defaultInterval
 	}
 
