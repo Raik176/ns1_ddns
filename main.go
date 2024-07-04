@@ -67,7 +67,7 @@ func main() {
 func UpdateDNS(domains string, zone string, key string, client *http.Client) {
 	pubIP := getPubIP()
 	if pubIP == os.Getenv("NS1_PUBIP") {
-		fmt.Printf("Records already up to date with IPv4 %s.", pubIP)
+		fmt.Printf("Records already up to date with IPv4 %s.\n", pubIP)
 		return
 	}
 	fmt.Printf("Updating all records with IPv4 %s\n", pubIP)
