@@ -1,6 +1,8 @@
 # ns1_ddns
 NS1 Dynamic DNS Updater
+
 Build using `docker build . -t rhm176/ns1_ddns`
+
 Environment variables:
 * `NS1_KEY` Required, API Key from NS1
 * `NS1_ZONE` Required, NS1 Zone name
