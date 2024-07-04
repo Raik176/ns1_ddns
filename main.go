@@ -3,11 +3,11 @@ package main
 import (
 	"os"
 	"fmt"
-	//"time"
+	"time"
 	"bytes"
 	"strings"
+	"strconv"
     "net/http"
-	//"os/signal"
 	"io/ioutil"
 	"encoding/json"
 )
@@ -25,27 +25,51 @@ type Answer struct {
 }
 
 const (
-	recordType = "A"
-	baseURL  = "https://api.nsone.net/v1/zones/"
+	recordType      = "A"
+	baseURL         = "https://api.nsone.net/v1/zones/"
+	defaultInterval = 10
 )
 
 func main() {
 	domains := os.Getenv("NS1_DOMAINS")
 	zone := os.Getenv("NS1_ZONE")
 	key := os.Getenv("NS1_KEY")
+	interval := os.Getenv("NS1_INTERVAL")
 
-	if domains == "" || zone == "" || key == "" {
+	if zone == "" || key == "" {
 		fmt.Println("Missing required environment variables.")
 		return
+	}
+	if domains == "" {
+		fmt.Println("Missing NS1_DOMAINS, setting it to NS1_ZONE.")
+		domains = zone
+	}
+	intervalMinutes, err := strconv.Atoi(interval)
+	if err != nil {
+		fmt.Printf("Missing or invalid NS1_INTERVAL, using %d (default)\n", defaultInterval)
+		intervalMinutes = defaultInterval
 	}
 
 	client := &http.Client{}
 
 	UpdateDNS(domains, zone, key, client)
+	ticker := time.NewTicker(time.Duration(intervalMinutes) * time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			UpdateDNS(domains, zone, key, client)
+		}
+	}
 }
 
 func UpdateDNS(domains string, zone string, key string, client *http.Client) {
 	pubIP := getPubIP()
+	if pubIP == os.Getenv("NS1_PUBIP") {
+		fmt.Printf("Records already up to date with IPv4 %s.", pubIP)
+		return
+	}
 	fmt.Printf("Updating all records with IPv4 %s\n", pubIP)
 	for _, domain := range strings.Split(domains, ",") {
 		url := fmt.Sprintf("%s%s/%s/%s", baseURL, zone, domain, recordType)
@@ -86,6 +110,7 @@ func UpdateDNS(domains string, zone string, key string, client *http.Client) {
 			fmt.Printf("Failed to update record %s. Status code: %d\n", domain, resp.StatusCode)
 		}
 	}
+	os.Setenv("NS1_PUBIP", pubIP)
 }
 
 func getPubIP() string {
