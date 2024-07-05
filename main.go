@@ -69,8 +69,13 @@ func main() {
 	if disable_api != "true" { // TODO: add better api sometime
 		go func() {
 			http.HandleFunc("/api", func(w http.ResponseWriter, r *http.Request) {
+				query := r.URL.Query().Get("zone")
+				if query == "" {
+					w.WriteHeader(200)
+					return
+				}
 				if r.Method == http.MethodGet {
-					req, err := http.NewRequest("GET", baseURL + r.URL.Query().Get("zone"), nil)
+					req, err := http.NewRequest("GET", baseURL + query, nil)
 					if err != nil {
 						fmt.Printf("Error during api call : %v\n", err)
 						return
